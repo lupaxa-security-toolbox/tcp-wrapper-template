@@ -45,11 +45,12 @@ post_commit_hooks = [
   "git push --tags",
 ]
 
-# Files where versions are updated — add entries once sources exist, e.g.:
-# [[tool.bumpversion.files]]
-# filename = "pyproject.toml"
-#
-# [[tool.bumpversion.files]]
-# filename = "src/my_package/__init__.py"
-# search = '__version__ = "{current_version}"'
-# replace = '__version__ = "{new_version}"'
+[[tool.bumpversion.files]]
+filename = "src/template.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src/template.sh"
+search = "VERSION='{current_version}'"
+replace = "VERSION='{new_version}'"

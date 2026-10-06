@@ -8,7 +8,9 @@
 
 Starting point for a TCP Wrapper filter that the [Tcp Wrapper Multiplexer](https://github.com/lupaxa-security-toolbox/tcp-wrapper-multiplexer) can run.
 
-Copy `src/template.sh`, name the copy for the check you want, and fill in the allow or deny logic. Exit `0` to allow the connection. Any other exit code denies it, and the multiplexer stops on that result.
+Copy `src/template.sh` or `src/template.py`, name the copy for the check you want, and fill in the allow or deny logic. Use the Python file when the filter has to look something up, such as an ASN or a country.
+
+Exit `0` to allow the connection. Any other exit code denies it, and the multiplexer stops on that result.
 
 > **Note:**
 > TCP Wrappers do not replace a firewall. Use a filter as one layer of a larger control.
@@ -21,7 +23,15 @@ Copy your filter to `/usr/local/sbin` and make it executable. The name you insta
 sudo install -m 755 src/template.sh /usr/local/sbin/your-filter
 ```
 
-`main` calls `handle_blocks`. That function is the lookup to replace. The sample value `item1` is not on an empty `BAN_LIST`, so the script allows the connection until you fill the list in.
+`src/template.sh --version` and `src/template.py --version` print the template version. A deny log includes that same version, so an installed copy can be told apart from an older one.
+
+Install the Python template the same way:
+
+```bash
+sudo install -m 755 src/template.py /usr/local/sbin/your-filter
+```
+
+`main` calls `handle_blocks`. That function is the lookup to replace. The sample value `item1` is not on an empty `BAN_LIST`, so the filter allows the connection until you fill the list in.
 
 ## Configure the Check
 
@@ -41,6 +51,20 @@ Set those at the top of the script. `handle_blocks` looks up one value for this 
 
 ```bash
 check_results "${value}" "${BAN_LIST}"
+```
+
+In `src/template.py`, set the same two names. Replace the `lookup` return value with the ASN, country code, or other value to check:
+
+```python
+BAN_LIST = "match-me"
+ACTION = DENY_ACTION
+```
+
+Set those at the top of the file. `lookup` returns the value for this connection:
+
+```python
+def lookup(ip: str) -> str:
+    return "item1"
 ```
 
 ## Multiplexer
@@ -92,6 +116,8 @@ sshd: ALL
 ```bash
 make init
 make bash-check
+make python-install-dev
+make python-check
 ```
 
 <a href="https://github.com/the-lupaxa-project">

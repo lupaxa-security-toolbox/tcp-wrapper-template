@@ -19,10 +19,13 @@
 #      sshd: ALL                                                                           #
 # ---------------------------------------------------------------------------------------- #
 
+# Template version. Printed by --version and included in deny logs.
+VERSION='0.1.0'
+
 ALLOW_ACTION='ALLOW'
 DENY_ACTION='DENY'
 
-# space-separated list of country codes
+# Space-separated or comma-separated values matched as whole tokens.
 BAN_LIST=''
 
 # Allow or Deny countries listed
@@ -69,6 +72,29 @@ function debug()
 }
 
 # ---------------------------------------------------------------------------------------- #
+# Is listed                                                                                #
+# ---------------------------------------------------------------------------------------- #
+# True when item is one whole token in the list. AS64 does not match AS64496.              #
+# ---------------------------------------------------------------------------------------- #
+
+function is_listed()
+{
+    local item="${1:-}"
+    local list="${2:-}"
+    local token
+    local -a tokens=()
+
+    shopt -s nocasematch
+    IFS=$' \t\n,' read -ra tokens <<< "${list}"
+    for token in "${tokens[@]}"; do
+        if [[ -n "${token}" && "${token}" == "${item}" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+# ---------------------------------------------------------------------------------------- #
 # Check results                                                                            #
 # ---------------------------------------------------------------------------------------- #
 # A wrapper to check individual results against a given array and deny as required.        #
@@ -83,13 +109,13 @@ function check_results()
     # Check the current item and list and decide what action to take
     #
     if [[ "${ACTION}" == 'DENY' ]]; then
-        [[ $list =~ $item ]] && RESPONSE=${DENY_ACTION} || RESPONSE=${ALLOW_ACTION}
+        is_listed "${item}" "${list}" && RESPONSE=${DENY_ACTION} || RESPONSE=${ALLOW_ACTION}
     else
-        [[ $list =~ $item ]] && RESPONSE=${ALLOW_ACTION} || RESPONSE=${DENY_ACTION}
+        is_listed "${item}" "${list}" && RESPONSE=${ALLOW_ACTION} || RESPONSE=${DENY_ACTION}
     fi
 
     if [[ $RESPONSE = "${DENY_ACTION}" ]]; then
-        debug "$RESPONSE sshd connection from ${IP} ($item)"
+        debug "$RESPONSE sshd connection from ${IP} ($item) version ${VERSION}"
         exit 1
     fi
 
@@ -118,6 +144,14 @@ function handle_blocks
 
 function main()
 {
+    #
+    # Version, so a copied filter can be identified.
+    #
+    if [[ "${1:-}" == "--version" || "${1:-}" == "-V" ]]; then
+        echo "tcp-wrapper-template ${VERSION}"
+        exit 0
+    fi
+
     #
     # NO IP given - error and abort
     #
