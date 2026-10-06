@@ -13,7 +13,7 @@ import contextlib
 import sys
 import syslog
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 ALLOW_ACTION = "ALLOW"
 DENY_ACTION = "DENY"

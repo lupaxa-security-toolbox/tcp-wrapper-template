@@ -20,7 +20,7 @@
 # ---------------------------------------------------------------------------------------- #
 
 # Template version. Printed by --version and included in deny logs.
-VERSION='0.1.0'
+VERSION='0.1.1'
 
 ALLOW_ACTION='ALLOW'
 DENY_ACTION='DENY'
